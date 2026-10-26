@@ -1,0 +1,33 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const file=path.join(__dirname,'..','pokebonk-afk.user.js');const C=require(file);
+const opts=over=>({...structuredClone(C.DEFAULTS),...over});
+let assertions=0;function equal(a,b){assert.deepEqual(a,b);assertions++}
+equal(C.budgetAllowed(10,100,0,opts({})).ok,false);
+equal(C.budgetAllowed(10,100,0,opts({maxPrice:'10'})).ok,true);
+equal(C.budgetAllowed(11,100,0,opts({maxPrice:'10'})).ok,false);
+equal(C.budgetAllowed(10,100,0,opts({reserve:'90'})).ok,true);
+equal(C.budgetAllowed(11,100,0,opts({reserve:'90'})).ok,false);
+equal(C.budgetAllowed(10,100,10,opts({runCap:'20'})).ok,true);
+equal(C.budgetAllowed(11,100,10,opts({runCap:'20'})).ok,false);
+equal(C.budgetAllowed(10,100,0,opts({maxPrice:'0'})).ok,false);
+equal(C.budgetAllowed(10,100,0,opts({maxPrice:'NaN'})).ok,false);
+equal(C.rankCards([{label:'a',text:'+26 幸运'},{label:'b',text:'+17% 速度'},{label:'c',text:'+29% 异常状态几率'}],opts({}))[0].label,'a');
+equal(C.rankCards([{label:'a',text:'+42 最大 HP'},{label:'b',text:'+26% 经验'},{label:'c',text:'+32 幸运'}],opts({}))[0].label,'c');
+equal(C.rankCards([{label:'a',text:'+26 幸运'},{label:'b',text:'+32 幸运'},{label:'c',text:'+99% 伤害'}],opts({}))[0].label,'b');
+equal(C.rankCards([{label:'幸运蛋',text:'+30% 经验'},{label:'力量头带',text:'+15% 伤害'}],opts({}))[0].label,'力量头带');
+equal(C.rankCards([{label:'a',text:'+20 幸运'},{label:'b',text:'+10% 伤害'}],opts({itemPriority:['b']}))[0].label,'b');
+equal(C.statScore('+20% 攻击速度').reason,'攻击速度');equal(C.statScore('+20% 特殊伤害').reason,'特殊伤害');
+equal(C.statScore('受到的伤害 -15%').rank,999);
+equal(C.restrictionMessage('账号已封禁'),true);equal(C.restrictionMessage('未通过服务器校验。'),true);equal(C.restrictionMessage('放逐了一个招式'),false);
+const fairy={name:'皮皮',species:35,types:['fairy']},dragon={name:'哈克龙',species:148,types:['dragon']},fire={name:'喷火龙',species:6,types:['fire']};
+equal(C.helperDecision(fairy,[dragon],1,opts({})).keep,true);
+equal(C.helperDecision(fire,[dragon,fairy],2,opts({})).keep,false);
+equal(C.helperDecision({...fire,shiny:true},[dragon,fairy],2,opts({helperPolicy:'ignore',helperRelease:['喷火龙']})).keep,true);
+equal(C.helperDecision(fire,[],2,opts({helperPolicy:'list',helperKeep:['6']})).keep,true);
+equal(C.helperDecision(fire,[],2,opts({helperPolicy:'list'})).keep,false);
+equal(C.movementKeys(0,-10,0),['KeyW']);equal(C.movementKeys(10,0,0),['KeyD']);equal(C.movementKeys(-10,0,Math.PI/2),['KeyW']);
+const terrain={height:()=>0,inBounds:(x,z)=>Math.abs(x)<40&&Math.abs(z)<40,inSolid:(x,z)=>x>7&&x<13&&Math.abs(z)<7,hitProp:()=>false,waterAt:()=>-99};
+const route=C.routePath({x:0,z:0},{x:25,z:0,radius:2},terrain);assert(route?.length);assertions++;assert(route.some(p=>Math.abs(p.z)>=7));assertions++;assert(route.every(p=>!terrain.inSolid(p.x,p.z)));assertions++;
+equal(C.routePath({x:0,z:0},{x:25,z:0,radius:1},{...terrain,inSolid:(x,z)=>Math.abs(x-10)<3}),null);
+
+console.log('PASS: '+assertions+' core assertions');
