@@ -30,4 +30,35 @@ const terrain={height:()=>0,inBounds:(x,z)=>Math.abs(x)<40&&Math.abs(z)<40,inSol
 const route=C.routePath({x:0,z:0},{x:25,z:0,radius:2},terrain);assert(route?.length);assertions++;assert(route.some(p=>Math.abs(p.z)>=7));assertions++;assert(route.every(p=>!terrain.inSolid(p.x,p.z)));assertions++;
 equal(C.routePath({x:0,z:0},{x:25,z:0,radius:1},{...terrain,inSolid:(x,z)=>Math.abs(x-10)<3}),null);
 
+
+const p=C.planFor(JSON.stringify({113:{moves:[2,2,'3'],vits:['speed',4],fus:['fu-113'],items:['star-piece']},35:{moves:[9]}}),113);
+equal(p,{moves:[2],vits:['speed'],fus:['fu-113'],items:['star-piece']});
+equal(C.planFor('{bad',113),{moves:[],vits:[],fus:[],items:[]});equal(C.planFor(JSON.stringify({35:{moves:[9]}}),113).moves,[]);
+const blank=C.cleanPlan(null),run={gold:100},book={shopSpent:0,slotSpent:0,slotSpins:0};
+equal(C.mapTaskPolicy({kind:'altar',data:{sealed:true}},opts({}),p,run,book),null);
+assert(C.mapTaskPolicy({kind:'altar',data:{}},opts({}),p,run,book));assertions++;
+equal(C.mapTaskPolicy({kind:'ditto'},opts({}),blank,run,book),null);
+assert(C.mapTaskPolicy({kind:'ditto'},opts({}),p,run,book));assertions++;
+equal(C.mapTaskPolicy({kind:'fossil'},opts({}),p,run,book),null);
+assert(C.mapTaskPolicy({kind:'fossil'},opts({fossilChoice:'dome'}),p,run,book));assertions++;
+equal(C.mapTaskPolicy({kind:'bill',data:{ready:true}},opts({}),blank,run,book),null);
+equal(C.mapTaskPolicy({kind:'bill',data:{ready:false}},opts({}),p,run,book),null);
+assert(C.mapTaskPolicy({kind:'bill',data:{ready:true}},opts({}),p,run,book));assertions++;
+for(const kind of ['boss','portal','cursed','porygon','challenge','greed'])equal(C.mapTaskPolicy({kind},opts({}),p,run,book),null);
+equal(C.mapTaskPolicy({kind:'meowth'},opts({}),p,run,book),null);
+equal(C.mapTaskPolicy({kind:'slots'},opts({slotMaxSpins:'3'}),p,run,book),null);
+equal(C.spendingAllowed('shop',12,100,0,opts({shopMaxPrice:'12'})).ok,true);
+equal(C.spendingAllowed('shop',13,100,0,opts({shopMaxPrice:'12'})).ok,false);
+equal(C.spendingAllowed('shop',12,60,0,opts({shopReserve:'50'})).ok,false);
+equal(C.spendingAllowed('shop',12,100,12,opts({shopRunCap:'22'})).ok,false);
+equal(C.spendingAllowed('shop',1,100,0,opts({maxPrice:'100'})).ok,false);
+equal(C.slotAllowed(5,100,book,opts({slotRunCap:'12',slotMaxSpins:'2'})).ok,true);
+equal(C.slotAllowed(5,100,{...book,slotSpins:2},opts({slotRunCap:'12',slotMaxSpins:'2'})).ok,false);
+equal(C.slotAllowed(5,100,book,opts({slotRunCap:'12',slotMaxSpins:'1.5'})).ok,false);
+equal(C.slotAllowed(9,100,{...book,slotSpent:12},opts({slotRunCap:'12'})).ok,false);
+equal(C.slotAllowed(9,100,book,opts({slotMaxPrice:'8'})).ok,false);
+equal(C.slotAllowed(9,55,book,opts({slotReserve:'50'})).ok,false);
+equal(C.slotAllowed(0,100,book,opts({slotRunCap:'0',slotMaxSpins:'0'})).ok,false);
+equal(C.DEFAULTS.itemStatFallback,false);equal(C.DEFAULTS.fossilChoice,'');
+
 console.log('PASS: '+assertions+' core assertions');
