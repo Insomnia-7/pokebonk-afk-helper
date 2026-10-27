@@ -37,7 +37,7 @@ equal(C.planFor('{bad',113),{moves:[],vits:[],fus:[],items:[]});equal(C.planFor(
 const blank=C.cleanPlan(null),run={gold:100},book={shopSpent:0,slotSpent:0,slotSpins:0};
 equal(C.mapTaskPolicy({kind:'altar',data:{sealed:true}},opts({}),p,run,book),null);
 assert(C.mapTaskPolicy({kind:'altar',data:{}},opts({}),p,run,book));assertions++;
-equal(C.mapTaskPolicy({kind:'ditto'},opts({}),blank,run,book),null);
+equal(C.mapTaskPolicy({kind:'ditto'},opts({itemStatFallback:false}),blank,run,book),null);
 assert(C.mapTaskPolicy({kind:'ditto'},opts({}),p,run,book));assertions++;
 equal(C.mapTaskPolicy({kind:'fossil'},opts({}),p,run,book),null);
 assert(C.mapTaskPolicy({kind:'fossil'},opts({fossilChoice:'dome'}),p,run,book));assertions++;
@@ -59,6 +59,32 @@ equal(C.slotAllowed(9,100,{...book,slotSpent:12},opts({slotRunCap:'12'})).ok,fal
 equal(C.slotAllowed(9,100,book,opts({slotMaxPrice:'8'})).ok,false);
 equal(C.slotAllowed(9,55,book,opts({slotReserve:'50'})).ok,false);
 equal(C.slotAllowed(0,100,book,opts({slotRunCap:'0',slotMaxSpins:'0'})).ok,false);
-equal(C.DEFAULTS.itemStatFallback,false);equal(C.DEFAULTS.fossilChoice,'');
+equal(C.DEFAULTS.itemStatFallback,true);equal(C.DEFAULTS.fossilChoice,'');
 
+
+equal(C.CATALOG.items.length,126);equal(C.CATALOG.vitamins.length,26);equal(C.CATALOG.fusions.length,106);equal(C.CATALOG.moves.length,919);
+const blessed=labels=>C.rankBlessings(labels.map(label=>({label,text:label})))[0].label;
+equal(blessed(['+42 最大 HP','+50% 经验','+2% 速度','+1% 伤害','+1 幸运']),'+1 幸运');
+equal(blessed(['+50% 经验','+2% 速度','+1% 伤害']),'+1% 伤害');equal(blessed(['+50% 经验','+2% 速度']),'+2% 速度');equal(blessed(['+50% 经验','+90 最大 HP']),'+50% 经验');equal(blessed(['+30% 范围','+10 最大 HP']),'+30% 范围');
+equal(C.statScore('幸运 +32').amount,32);
+const defs=C.CATALOG,emptyPlayer={moves:[],moveSlots:6},baseRoute=C.selectionRoute(blank,emptyPlayer,opts({}));
+const card=(label,text='')=>({label,text});const vitOffers=[{kind:'newVit',vit:'loaded-dice',rarity:4},{kind:'newVit',vit:'star-piece-v',rarity:0},{kind:'newVit',vit:'nugget',rarity:4}];
+equal(C.chooseUpgrade([card('机变骰子'),card('星星碎片'),card('金珠')],vitOffers,baseRoute,emptyPlayer,opts({})).index,1);
+equal(C.chooseUpgrade([card('机变骰子')],[vitOffers[0]],baseRoute,emptyPlayer,opts({})),null);
+equal(C.chooseUpgrade([card('星星碎片')],[vitOffers[1]],baseRoute,emptyPlayer,opts({vitaminMode:'manual'})),null);
+const plannedVit=C.selectionRoute({vits:['nugget']},emptyPlayer,opts({}));equal(C.chooseUpgrade([card('星星碎片'),card('金珠')],[vitOffers[1],vitOffers[2]],plannedVit,emptyPlayer,opts({})).index,1);
+const luckyFirst=opts({vitaminMode:'attributes'});equal(C.chooseUpgrade([card('星星碎片'),card('金珠')],[vitOffers[1],vitOffers[2]],plannedVit,emptyPlayer,luckyFirst).index,0);
+const fusion=defs.fusions.find(f=>f.key==='fu-113'),ingredients=fusion.moves.map(k=>defs.moves.find(m=>m.key===k).id),extraMove=defs.moves.find(m=>!ingredients.includes(m.id)).id;
+const scarcePlayer={moves:[{def:{id:9999},level:1}],moveSlots:3};const fusionPlan={moves:[extraMove],fus:['fu-113']},fusionRoute=C.selectionRoute(fusionPlan,scarcePlayer,opts({}));equal(fusionRoute.missingIngredients,ingredients);equal(fusionRoute.freeMoveSlots,2);
+equal(C.chooseUpgrade([card('其他招式')],[{kind:'newMove',id:extraMove}],fusionRoute,scarcePlayer,opts({})),null);
+equal(C.chooseUpgrade([card('其他招式'),card('素材')],[{kind:'newMove',id:extraMove},{kind:'newMove',id:ingredients[0]}],fusionRoute,scarcePlayer,opts({})).index,1);
+const filledPlayer={moves:[{def:{id:ingredients[0]},level:7},{def:{id:ingredients[1]},level:2}],moveSlots:6};const upgradeRoute=C.selectionRoute(fusionPlan,filledPlayer,opts({}));equal(C.chooseUpgrade([card('素材2'),card('素材1')],[{kind:'upMove',slot:1},{kind:'upMove',slot:0}],upgradeRoute,filledPlayer,opts({})).index,1);
+const deny=opts({autoBanish:true,banishMoves:[String(extraMove),String(ingredients[0])],banishVitamins:['star-piece-v','nugget']});
+equal(C.banishCandidate([card('受保护的素材')],[{kind:'newMove',id:ingredients[0]}],fusionRoute,scarcePlayer,deny),null);
+equal(C.banishCandidate([card('已学招式')],[{kind:'upMove',slot:0}],baseRoute,filledPlayer,deny),null);
+equal(C.banishCandidate([card('幸运')],[{kind:'newVit',vit:'star-piece-v'}],baseRoute,emptyPlayer,deny),null);
+equal(C.banishCandidate([card('金珠')],[{kind:'newVit',vit:'nugget'}],baseRoute,emptyPlayer,deny).key,'vnugget');
+equal(C.resourceAllowed('reroll',0,opts({}),2),true);equal(C.resourceAllowed('reroll',0,opts({}),3),false);equal(C.resourceAllowed('reroll',2,opts({rerollRunCap:'2'}),0),false);equal(C.resourceAllowed('reroll',0,opts({rerollPerLevel:'NaN'}),0),false);equal(C.resourceAllowed('skip',0,opts({skipRunCap:'0'})),false);equal(C.resourceAllowed('banish',0,opts({})),false);
+
+const completedRoute=C.selectionRoute(fusionPlan,filledPlayer,opts({}),defs,['fu-113']);equal(completedRoute.missingIngredients,[]);equal(completedRoute.pendingFusions,[]);
 console.log('PASS: '+assertions+' core assertions');
