@@ -21,7 +21,7 @@ function log(s){if(lastLog!==s){lastLog=s;console.info('[PokéBonk AFK]',s);}}
 function h(tag,attrs={},...children){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!==null)e.setAttribute(k,v);}for(const c of children.flat()){if(c!=null)e.append(c);}return e;}
 const panel=h('div',{id:'pb-afk-helper',style:'position:fixed;left:12px;top:155px;z-index:2147483646;width:245px;box-sizing:border-box;padding:12px;border:1px solid #6876ae;border-radius:12px;background:#151d30ed;color:#eef4ff;font:13px/1.6 system-ui;pointer-events:auto;box-shadow:0 6px 24px #0007'});
 const headline=h('b',{},'PokéBonk 无尽挂机助手');
-headline.title='助手 3.2.0 · 游戏 0.8.87 · 客户端加载器 1.2.0';
+headline.title='助手 3.2.1 · 游戏 0.8.87 · 客户端加载器 1.2.0';
 const startBtn=h('button',{'data-toggle':'',onclick:()=>setEnabled(!opt.enabled)},'启动');
 const configBtn=h('button',{'data-config':'',onclick:()=>configure()},'设置');
 const foldBtn=h('button',{'data-fold':'','aria-expanded':'true',onclick:()=>{panelBody.hidden=!panelBody.hidden;foldBtn.textContent=panelBody.hidden?'展开':'收起';foldBtn.setAttribute('aria-expanded',String(!panelBody.hidden));}},'收起');
@@ -92,7 +92,7 @@ function configure(){
  document.body.append(box);
 }
 window.addEventListener('keydown',e=>{if(e.code==='F8'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName||''))setEnabled(!opt.enabled);}},true);
-function getStatus(){return {helperVersion:'3.2.0',clientVersion:window.pokebonkDesktop?.version||null,catalogVersion:CATALOG.version,enabled:opt.enabled,connected:!!app,connectionState,plan:readBuildPlan(app?.run),pokemon:pokemonLabel(app?.run),build:document.querySelector('meta[name="pokebonk-build"]')?.content,mode,target:target?.label||null,ledger:{...ledger},choices,lastLog,stoppedReason,updateNotice};}
+function getStatus(){return {helperVersion:'3.2.1',clientVersion:window.pokebonkDesktop?.version||null,catalogVersion:CATALOG.version,enabled:opt.enabled,connected:!!app,connectionState,plan:readBuildPlan(app?.run),pokemon:pokemonLabel(app?.run),build:document.querySelector('meta[name="pokebonk-build"]')?.content,mode,target:target?.label||null,ledger:{...ledger},choices,lastLog,stoppedReason,updateNotice};}
 window.PokeBonkAFK={start:()=>setEnabled(true),stop:()=>setEnabled(false),configure,status:getStatus};
 updatePanel();
 

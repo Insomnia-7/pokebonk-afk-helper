@@ -28,7 +28,7 @@ const routes={
   fs.writeFileSync(path.join(tmp,'electron.log'),output);
   assert.equal(exit,0,output.slice(-3000));assert(fs.existsSync(reportPath),'Missing Electron report: '+output.slice(-3000));
   const report=JSON.parse(fs.readFileSync(reportPath,'utf8'));
-  assert.equal(report.script?.success,true,JSON.stringify(report.script));assert.equal(report.version,'1.2.0');assert.match(report.webgl.desktop,/1\.2\.0/);assert.equal(report.script.helper.helperVersion,'3.2.0');assert.equal(report.script.helper.catalogVersion,'0.8.87');assert.equal(report.script.helper.ledger.shopSpent,22);assert.equal(report.script.nodeIntegration,'undefined');assert.equal(report.script.nativeFunctionsUnchanged,true);
+  assert.equal(report.script?.success,true,JSON.stringify(report.script));assert.equal(report.version,'1.2.0');assert.match(report.webgl.desktop,/1\.2\.0/);assert.equal(report.script.helper.helperVersion,'3.2.1');assert.equal(report.script.helper.catalogVersion,'0.8.87');assert.equal(report.script.helper.ledger.shopSpent,22);assert.equal(report.script.nodeIntegration,'undefined');assert.equal(report.script.nativeFunctionsUnchanged,true);
   const storage=JSON.parse(fs.readFileSync(path.join(root,'desktop/logs/paths.json'),'utf8'));for(const value of Object.values(storage))assert(value.toUpperCase().startsWith('D:\\'),value);
   console.log('PASS: real Electron 1.2.0 client, D: profile, automatic helper injection, renamed fusion, actual shop ledger, luck vitamin, expand control, isolated preload, native functions unchanged');
  }finally{if(child&&child.exitCode===null)child.kill();await new Promise(r=>server.close(r));}

@@ -1,4 +1,4 @@
-param([string]$ClientVersion='1.2.0')
+﻿param([string]$ClientVersion='1.2.0')
 $ErrorActionPreference='Stop'
 if([IO.Path]::GetPathRoot($PSScriptRoot)-ne 'D:\'){throw '客户端入口必须位于 D 盘。'}
 if($ClientVersion-notmatch '^\d+\.\d+\.\d+$'){throw '客户端版本格式不正确。'}

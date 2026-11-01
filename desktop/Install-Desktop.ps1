@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$ClientExe,[string]$ArchiveTool)
+﻿param([Parameter(Mandatory=$true)][string]$ClientExe,[string]$ArchiveTool)
 $ErrorActionPreference='Stop'
 if([IO.Path]::GetPathRoot($PSScriptRoot)-ne 'D:\'){throw '请把助手放到 D 盘后再安装客户端。'}
 $ClientExe=(Resolve-Path -LiteralPath $ClientExe).Path
