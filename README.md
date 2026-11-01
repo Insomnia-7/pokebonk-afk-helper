@@ -1,6 +1,6 @@
 # PokéBonk 无尽挂机助手
 
-当前发布 **3.2.1**，适配官网 **0.8.87（mvxmqseg）**，新增基于官方 **1.2.0 Windows 便携客户端** 的 D 盘助手启动入口。
+当前发布 **3.2.1**，适配官网 **0.8.87（mvxmqseg）**，新增基于官方 **1.2.0 Windows 便携客户端** 的 助手启动入口。
 
 [安装 / 更新脚本](https://raw.githubusercontent.com/Insomnia-7/pokebonk-afk-helper/main/pokebonk-afk.user.js) · [反馈问题](https://github.com/Insomnia-7/pokebonk-afk-helper/issues)
 
