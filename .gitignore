@@ -1,0 +1,13 @@
+research/
+test-temp/
+node_modules/
+desktop/client/
+desktop/profile/
+desktop/temp/
+desktop/logs/
+desktop/updates/
+desktop/crash-dumps/
+desktop/downloads/
+desktop/import-temp/
+test/*.png
+*.log

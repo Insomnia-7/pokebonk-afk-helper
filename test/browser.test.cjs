@@ -38,11 +38,11 @@ const {chromium}=require('playwright');
  const pkm=[{id:35,name:'皮皮',types:['fairy'],bst:300},{id:148,name:'哈克龙',types:['dragon'],bst:420},{id:6,name:'喷火龙',types:['fire'],bst:530},{id:144,name:'急冻鸟',types:['ice'],bst:580},{id:113,name:'吉利蛋',types:['normal'],bst:450},{id:7,name:'杰尼龟',types:['water'],bst:300}];
  const defs=[{key:'star-piece',rarity:2,desc:'+20 幸运',max:10},{key:'lucky-egg',rarity:2,desc:'+30% 经验',max:10},{key:'muscle-band',rarity:2,desc:'+20% 伤害',max:10}];
  await page.route('**/*',async route=>{const url=new URL(route.request().url());let body,type='text/javascript';
-  if(url.pathname==='/'){type='text/html';body='<html><head><meta name="pokebonk-build" content="mvpt1dlr"></head><body><div id="ui"></div><script type="module" src="/assets/main-entry-mvpt1dlr.js"></script></body></html>'}
-  else if(url.pathname==='/assets/main-entry-mvpt1dlr.js')body='import("./main-runtime-mvpt1dlr.js");';
-  else if(url.pathname==='/assets/main-runtime-mvpt1dlr.js')body='import * as data from "./defineProperty-mvpt1dlr.js";'+mock;
-  else if(url.pathname==='/assets/defineProperty-mvpt1dlr.js')body='export const Vr=()=>3;export const Xr='+JSON.stringify(defs)+';export const ti='+JSON.stringify(C.CATALOG.vitamins)+';export const g=p=>"/assets/"+p;export const _=p=>"/data/"+p;';
-  else if(url.pathname==='/version.json'){type='application/json';body=JSON.stringify({build:'mvpt1dlr',version:'0.8.59'})}
+  if(url.pathname==='/'){type='text/html';body='<html><head><meta name="pokebonk-build" content="mvxmqseg"></head><body><div id="ui"></div><script type="module" src="/assets/main-entry-mvxmqseg.js"></script></body></html>'}
+  else if(url.pathname==='/assets/main-entry-mvxmqseg.js')body='import("./main-runtime-mvxmqseg.js");';
+  else if(url.pathname==='/assets/main-runtime-mvxmqseg.js')body='import * as data from "./defineProperty-mvxmqseg.js";'+mock;
+  else if(url.pathname==='/assets/defineProperty-mvxmqseg.js')body='export const Vr=()=>3;export const Xr='+JSON.stringify(defs)+';export const ti='+JSON.stringify(C.CATALOG.vitamins)+';export const g=p=>"/assets/"+p;export const _=p=>"/data/"+p;';
+  else if(url.pathname==='/version.json'){type='application/json';body=JSON.stringify({build:'mvxmqseg',version:'0.8.87'})}
   else if(url.pathname==='/data/moves.json'){type='application/json';body=JSON.stringify(C.CATALOG.moves)}
   else if(url.pathname==='/data/pokemon.json'){type='application/json';body=JSON.stringify(pkm)}
   else if(url.pathname==='/data/i18n/zh.json'){type='application/json';body=JSON.stringify({pokemon:{35:'皮皮',148:'哈克龙',6:'喷火龙',144:'急冻鸟'},items:{'star-piece':{name:'星星碎片'},'lucky-egg':{name:'幸运蛋'},'muscle-band':{name:'力量头带'}}})}
@@ -53,6 +53,7 @@ const {chromium}=require('playwright');
  await page.waitForFunction(()=>window.PokeBonkAFK?.status().connected,{timeout:6000});
  await page.waitForFunction(()=>window.PokeBonkAFK.status().lastLog.includes('126 件道具'),{timeout:6000});
 
+ equal(await page.evaluate(()=>typeof fixture.app.run.player.canHold),'undefined');equal(await page.evaluate(()=>typeof fixture.app.run.buyShopItem),'undefined');equal(await page.evaluate(()=>typeof fixture.app.run.ui.showFusion),'undefined');
  const settings=async values=>{await page.evaluate(()=>PokeBonkAFK.configure());for(const [name,value]of Object.entries(values)){const el=page.locator('[name="'+name+'"]');if(typeof value==='boolean')await el.setChecked(value);else if(await el.evaluate(e=>e.tagName)==='SELECT')await el.selectOption(value);else await el.fill(value);}await page.getByRole('button',{name:'保存设置',exact:true}).click();};
  for(const name of ['maxPrice','reserve','runCap','shopMaxPrice','shopReserve','shopRunCap','slotMaxPrice','slotReserve','slotRunCap','slotMaxSpins']){await page.evaluate(()=>PokeBonkAFK.configure());equal(await page.locator('[name="'+name+'"]').inputValue(),'');}
  await page.getByRole('button',{name:'保存设置',exact:true}).click();
@@ -116,8 +117,16 @@ const {chromium}=require('playwright');
  await page.evaluate(()=>{const r=fixture.app.run;r.ui.showItem(r,'secret-key',()=>fx.manualPicked=true);r.state='modal';PokeBonkAFK.start();});await page.waitForTimeout(1500);equal(await page.evaluate(()=>!!fx.manualPicked),false);
  await page.evaluate(()=>{fixture.app.run.ui.hideModal();PokeBonkAFK.configure();});
  await page.getByRole('combobox',{name:'目录分类'}).selectOption('vitamins');await page.getByPlaceholder('搜索全部名称、效果、ID 或编号').fill('机变骰子');equal(await page.locator('[data-catalog-count]').innerText().then(s=>s.includes('26 项；符合搜索 1 项')),true);await page.getByRole('button',{name:'加入优先',exact:true}).click();equal(await page.locator('[name="vitaminPriority"]').inputValue(),'loaded-dice');await page.getByRole('button',{name:'取消',exact:true}).click();
- await page.evaluate(()=>{clearInterval(fx.traceTimer);PokeBonkAFK.configure()});await page.screenshot({path:path.join(__dirname,'settings-v31-preview.png'),fullPage:true});await page.getByRole('button',{name:'取消',exact:true}).click();
+ // Actual economic spending also counts manual shop purchases and manual refreshes while automation is paused.
+ await page.evaluate(()=>{fixture.app.run.ui.hideModal();PokeBonkAFK.stop();const r=fixture.app.run;r.gold=100;r.shop.stock=[{key:'muscle-band',price:3,sold:false}];r.player.items.set('muscle-band',1);fx.beforeManualShop=PokeBonkAFK.status().ledger.shopSpent;r.state='modal';r.ui.showShop(r,()=>r.state='play');});
+ await page.locator('#ui .cards > button.card').evaluate(el=>el.click());await page.waitForTimeout(250);
+ equal(await page.evaluate(()=>PokeBonkAFK.status().ledger.shopSpent),await page.evaluate(()=>fx.beforeManualShop+3));
+ await page.locator('#ui .shop-reroll').evaluate(el=>el.click());await page.waitForTimeout(250);
+ equal(await page.evaluate(()=>PokeBonkAFK.status().ledger.shopSpent),await page.evaluate(()=>fx.beforeManualShop+10));
+ await page.evaluate(()=>{fixture.app.run.ui.hideModal();PokeBonkAFK.start();});
+ await page.evaluate(()=>{clearInterval(fx.traceTimer);PokeBonkAFK.configure()});await page.screenshot({path:path.join(__dirname,'settings-v32-preview.png'),fullPage:true});await page.getByRole('button',{name:'取消',exact:true}).click();
  await page.keyboard.press('F8');equal(await page.evaluate(()=>PokeBonkAFK.status().enabled),false);equal(await page.evaluate(()=>fixture.keys.size),0);
- equal(errors,[]);console.log('PASS: '+assertions+' assertions; v0.8.59 renamed data module and data URL factory; catalog; collapse; reroll cap; skip; three-step banish; manual items; bridge; per-account and per-Pokémon plans; evolution; no-plan manual; moves/vitamins/fusion ingredients; Ditto capped items; fossil explicit policy; actual WASD obstacle detour; altar hold without E; all map tasks; shop re-render and spend limits; slot animations, budgets and spin cap.');
+ equal(errors,[]);console.log('PASS: '+assertions+' assertions; v0.8.87 renamed data module and data URL factory; catalog; collapse; reroll cap; skip; three-step banish; manual items; bridge; per-account and per-Pokémon plans; evolution; no-plan manual; moves/vitamins/fusion ingredients; Ditto capped items; fossil explicit policy; actual WASD obstacle detour; altar hold without E; all map tasks; shop re-render and spend limits; slot animations, budgets and spin cap.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
+

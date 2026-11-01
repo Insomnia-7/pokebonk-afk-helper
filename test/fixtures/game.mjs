@@ -22,10 +22,10 @@ class UI {
  this.modal(X('h1',{},'等级 '+(run.player.level||12)),cards,X('div',{class:'actions'},reroll,skip,banish));
  }
  showBlessing(run,title,offers,callback){this.modal(X('h1',{},title),X('div',{class:'help'},'为本局选择一项祝福'),X('div',{class:'cards'},...offers.map(o=>X('button',{class:'card',onclick:()=>{this.hideModal();callback(o)}},X('div',{class:'bd'},X('h3',{},o.label))))));}
- showDitto(run,callback){this.modal(X('h1',{},'百变怪：我复制哪件道具？'),X('div',{class:'cards scroll'},...[...run.player.items].map(([id])=>X('button',{class:'card mini',onclick:()=>{if(run.player.canHold(id)){this.hideModal();callback(id)}}},X('div',{class:'bd'},X('h3',{},id),X('p',{},id==='star-piece'?'+20 幸运':'+50% 伤害'))))),X('div',{class:'actions'},X('button',{class:'btn ghost',onclick:()=>{this.hideModal();callback(null)}},'以后再说')));}
+ showDitto(run,callback){this.modal(X('h1',{},'百变怪：我复制哪件道具？'),X('div',{class:'cards scroll'},...[...run.player.items].map(([id])=>X('button',{class:'card mini',onclick:()=>{if(run.player.$room0887(id)){this.hideModal();callback(id)}}},X('div',{class:'bd'},X('h3',{},id),X('p',{},id==='star-piece'?'+20 幸运':'+50% 伤害'))))),X('div',{class:'actions'},X('button',{class:'btn ghost',onclick:()=>{this.hideModal();callback(null)}},'以后再说')));}
  showTrade(run,trade,callback){this.modal(X('h1',{},trade.title),X('div',{class:'cards'},...trade.offers.map(o=>X('button',{class:'card pact trade',onclick:()=>{this.hideModal();callback(o.key)}},X('div',{class:'bd'},X('h3',{},o.name))))),X('div',{class:'actions'},X('button',{class:'btn ghost',onclick:()=>{this.hideModal();callback(null)}},'以后再说')));}
- showFusion(run,offers,callback){this.modal(X('h1',{},'融合机器'),X('div',{class:'cards fu-cards'},...offers.map((o,i)=>X('button',{class:'card fusion'+(o.ready?'':' locked'),onclick:()=>{if(o.ready){this.hideModal();callback(i)}}},X('div',{class:'bd'},X('h3',{},o.r.key))))),X('div',{class:'actions'},X('button',{class:'btn ghost',onclick:()=>{this.hideModal();callback(null)}},'以后再说')));}
- showShop(run,onExit){const render=()=>{this.modal(X('h1',{},'喵喵'),X('div',{class:'cards'},...run.shop.stock.map(o=>X('button',{class:'card',onclick:()=>{if(run.buyShopItem(o))render()}},X('div',{class:'bd'},X('h3',{},o.key),X('p',{},o.key==='star-piece'?'+20 幸运':'+50% 伤害'))))),X('button',{class:'btn shop-exit',onclick:()=>{this.hideModal();onExit()}},'离开'));this.modalEl.classList.add('shop-modal');};render();}
+ $fusion0887(run,offers,callback){this.modal(X('h1',{},'融合机器'),X('div',{class:'cards fu-cards'},...offers.map((o,i)=>X('button',{class:'card fusion'+(o.ready?'':' locked'),onclick:()=>{if(o.ready){this.hideModal();callback(i)}}},X('div',{class:'bd'},X('h3',{},o.r.key))))),X('div',{class:'actions'},X('button',{class:'btn ghost',onclick:()=>{this.hideModal();callback(null)}},'以后再说')));}
+ showShop(run,onExit){const render=()=>{this.modal(X('h1',{},'喵喵'),X('button',{class:'btn shop-reroll',onclick:()=>{if(run.gold>=7){run.gold-=7;run.econ.shop+=7;render();}}},'刷新商店'),X('div',{class:'cards'},...run.shop.stock.map(o=>X('button',{class:'card',onclick:()=>{if(run.$purchase0887(o))render()}},X('div',{class:'bd'},X('h3',{},o.key),X('p',{},o.key==='star-piece'?'+20 幸运':'+50% 伤害'))))),X('button',{class:'btn shop-exit',onclick:()=>{this.hideModal();onExit()}},'离开'));this.modalEl.classList.add('shop-modal');};render();}
  showSlots(run,actions,onExit){const cab=X('div',{class:'sl-cab'}),spin=X('button',{class:'btn green big',onclick:()=>{if(cab.classList.contains('spinning')){fx.doubleSpin++;return;}const r=actions.spin();if(r){cab.classList.add('spinning');setTimeout(()=>{actions.pay(r);cab.classList.remove('spinning');},300);}}},'抽奖');this.modal(X('h1',{},'老虎机'),cab,X('div',{class:'actions'},spin,X('button',{class:'btn ghost',onclick:()=>{this.hideModal();onExit()}},'离开')));}
 }
 const makeBall=(x,z,free=false)=>({kind:free?'freechest':'chest',x,y:0,z,r:2.6,used:false,data:{}});
@@ -40,9 +40,9 @@ const makeRun=()=>{
  run.allies={state:'idle',down:-1,list:[],cap:2,canThrow(){return this.state==='down'&&Math.hypot(E.x[this.down]-run.player.pos.x,E.z[this.down]-run.player.pos.z)<9},dismiss(){const i=this.down;if(this.state!=='down')return;this.state='idle';this.down=-1;E.alive[i]=0;this.run.interactables.list.push(makeBall(E.x[i],E.z[i],true));window.fx.dismissed++},run};
 
  run.meta={account:{id:'offline-account'}};run.player.roster={id:113};run.player.speciesId=113;run.player.moves=[];
- run.player.items=new Map([['star-piece',1],['muscle-band',1]]);run.player.canHold=id=>(run.player.items.get(id)||0)<10;
- run.shop={stock:[{key:'star-piece',price:12,sold:false},{key:'muscle-band',price:10,sold:false},{key:'star-piece',price:19,sold:false}]};
- run.buyShopItem=function(entry){if(entry.sold||run.gold<entry.price||!run.player.canHold(entry.key))return false;entry.sold=true;run.gold-=entry.price;run.player.items.set(entry.key,(run.player.items.get(entry.key)||0)+1);fx.bought.push(entry.key);return true;};
+ run.player.items=new Map([['star-piece',1],['muscle-band',1]]);run.player.$room0887=id=>(run.player.items.get(id)||0)<10;
+ run.econ={shop:0};run.shop={stock:[{key:'star-piece',price:12,sold:false},{key:'muscle-band',price:10,sold:false},{key:'star-piece',price:19,sold:false}]};
+ run.$purchase0887=function(entry){if(entry.sold||run.gold<entry.price||!run.player.$room0887(entry.key))return false;entry.sold=true;run.gold-=entry.price;run.econ.shop+=entry.price;run.player.items.set(entry.key,(run.player.items.get(entry.key)||0)+1);fx.bought.push(entry.key);return true;};
  const rawInteract=run.interactables.interact;
  run.interactables.interact=function(item){
   if(item.kind==='chest'||item.kind==='freechest')return rawInteract.call(this,item);
@@ -51,7 +51,7 @@ const makeRun=()=>{
   if(item.kind==='ditto')run.ui.showDitto(run,id=>{if(id){item.used=true;fx.copies.push(id);}resume();});
   else if(item.kind==='fossil')run.ui.showTrade(run,{title:'化石遗迹',species:142,offers:['helix','dome','amber'].map(key=>({key,name:key}))},key=>{if(key){item.used=true;fx.fossils.push(key);}resume();});
   else if(item.kind==='snorlax'){item.used=true;run.ui.showBlessing(run,'卡比兽祝福',[{label:'+40 幸运'},{label:'+50% 伤害'}],o=>{fx.blessings.push(o.label);resume();});}
-  else if(item.kind==='bill')run.ui.showFusion(run,[{r:{key:'unplanned'},ready:true},{r:{key:'fu-113'},ready:false},{r:{key:'fu-113'},ready:true}],i=>{if(i!=null){fx.fusions.push(i);item.used=true;}resume();});
+  else if(item.kind==='bill')run.ui.$fusion0887(run,[{r:{key:'unplanned'},ready:true},{r:{key:'fu-113'},ready:false},{r:{key:'fu-113'},ready:true}],i=>{if(i!=null){fx.fusions.push(i);item.used=true;}resume();});
   else if(item.kind==='meowth')run.ui.showShop(run,resume);
   else if(item.kind==='slots')run.ui.showSlots(run,{cost:()=>5+fx.spins*2,spin:()=>{const cost=5+fx.spins*2;if(run.gold<cost)return null;run.gold-=cost;fx.spins++;return {cost};},pay:()=>{fx.paidOut++;}},resume);
   else resume();
@@ -83,3 +83,4 @@ function loop(now){app.frameGap();const run=app.run,E=run.enemies,p=run.player.p
  }
  pressed.clear();requestAnimationFrame(loop);
 }requestAnimationFrame(loop);
+

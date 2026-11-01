@@ -1,0 +1,7 @@
+{
+  "name": "pokebonk-afk-desktop-loader",
+  "version": "1.2.0",
+  "private": true,
+  "main": "main.cjs",
+  "description": "Loads the local official PokéBonk client and the AFK helper from D:"
+}

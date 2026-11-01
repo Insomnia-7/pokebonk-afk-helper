@@ -88,3 +88,4 @@ equal(C.resourceAllowed('reroll',0,opts({}),2),true);equal(C.resourceAllowed('re
 
 const completedRoute=C.selectionRoute(fusionPlan,filledPlayer,opts({}),defs,['fu-113']);equal(completedRoute.missingIngredients,[]);equal(completedRoute.pendingFusions,[]);
 console.log('PASS: '+assertions+' core assertions');
+

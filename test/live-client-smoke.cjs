@@ -1,0 +1,8 @@
+const fs=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..'),dir=path.join(root,'test-temp','live-client-smoke'),profile=path.join(dir,'profile');
+fs.mkdirSync(profile,{recursive:true});fs.writeFileSync(path.join(profile,'window.json'),JSON.stringify({width:1200,height:800,fullscreen:false}));
+const child=spawn(path.join(root,'desktop/client/PokeBonk.exe'),['--splash','--selftest='+dir,'--selftest-js='+path.join(__dirname,'live-client-smoke.js'),'--selftest-wait=2000','--afk-test-profile='+profile],{cwd:path.join(root,'desktop'),windowsHide:true,env:{...process.env,TEMP:dir,TMP:dir}});
+let output='';child.stdout.on('data',d=>output+=d);child.stderr.on('data',d=>output+=d);
+const timer=setTimeout(()=>child.kill(),105000);
+child.on('error',e=>{clearTimeout(timer);console.error(e);process.exitCode=1});
+child.on('exit',code=>{clearTimeout(timer);fs.writeFileSync(path.join(dir,'electron.log'),output);try{assert.equal(code,0);const report=JSON.parse(fs.readFileSync(path.join(dir,'report.json'),'utf8'));assert.equal(report.script?.connected,true,JSON.stringify(report.script));assert.equal(report.script.enabled,false,'Smoke test must not automate gameplay');assert.equal(report.script.desktop,'1.2.0');assert.equal(report.script.gameBuild,'mvxmqseg');assert(Number.isFinite(report.splashGoneMs),'Splash did not give way to the real game');console.log('PASS: official live website connected in the real client; '+report.script.gameBuild+'; splash closed; helper remains paused; no account sign-in or gameplay.');}catch(e){console.error(e);process.exitCode=1}});
