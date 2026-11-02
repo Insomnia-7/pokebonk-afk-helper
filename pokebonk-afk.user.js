@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokéBonk 无尽挂机助手·完整配置版
 // @namespace    local.pokebonk.afk
-// @version      3.3.2
+// @version      3.3.3
 // @description  地图任务寻路、宝可梦配置计划、复制道具、商店与抽奖预算。F8 开关。
 // @match        https://pokebonk.com/*
 // @run-at       document-idle
@@ -11,7 +11,7 @@
 // @grant        none
 // ==/UserScript==
 (function () {
-'use strict';window.__pbAfkVersion='3.3.2';
+'use strict';window.__pbAfkVersion='3.3.3';
 window.__pbDump=()=>{const r=window.__pbRun;if(!r)return'no run';const p=r.player.pos,l=r.interactables.list||[];console.table(l.map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,90)})));return l.length+' items | stageTime='+Math.round(r.stageTime)+' | stage='+r.stage};
 window.__pbReport=false;
 setInterval(()=>{return;const r=window.__pbRun;if(!r)return;try{const p=r.player.pos;const d={v:window.__pbAfkVersion,stage:r.stage,stageTime:Math.round(r.stageTime),mode:r.mode,endless:!!r.endless,items:(r.interactables.list||[]).map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,220)}))};if(typeof GM_xmlhttpRequest==='function')GM_xmlhttpRequest({method:'POST',url:'about:blank',data:JSON.stringify(d),headers:{'Content-Type':'application/json'}});}catch(e){}},8000);
@@ -724,7 +724,7 @@ function interact(run){
   if(target.type==='ball'&&canOpen(run,nearest)){
    releaseKeys();if(tap('KeyE'))log('打开 '+(freeBall(nearest)?'免费球':('普通球 · '+run.interactables.chestCost()+' ₽')));
   }else if(target.type==='task'&&nearest.kind!=='altar'&&mapTaskPolicy(nearest,opt,{...readBuildPlan(run),fus:currentRoute(run).pendingFusions},run,ledger)){
-   releaseKeys();if(tap('KeyE')){log('交互：'+target.label);skipped.set(nearest,performance.now()+(['meowth','slots','bill'].includes(nearest.kind)?90000:['gengar','cage','rock'].includes(nearest.kind)?1200:15000));}
+   releaseKeys();if(tap('KeyE')){log('交互：'+target.label);skipped.set(nearest,performance.now()+(['meowth','slots','bill'].includes(nearest.kind)?90000:nearest.kind==='gengar'?120000:['cage','rock'].includes(nearest.kind)?1200:15000));}
   }
  }
 
