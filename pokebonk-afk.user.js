@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokéBonk 无尽挂机助手·完整配置版
 // @namespace    local.pokebonk.afk
-// @version      3.3.1
+// @version      3.3.2
 // @description  地图任务寻路、宝可梦配置计划、复制道具、商店与抽奖预算。F8 开关。
 // @match        https://pokebonk.com/*
 // @run-at       document-idle
@@ -11,7 +11,7 @@
 // @grant        none
 // ==/UserScript==
 (function () {
-'use strict';window.__pbAfkVersion='3.3.1';
+'use strict';window.__pbAfkVersion='3.3.2';
 window.__pbDump=()=>{const r=window.__pbRun;if(!r)return'no run';const p=r.player.pos,l=r.interactables.list||[];console.table(l.map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,90)})));return l.length+' items | stageTime='+Math.round(r.stageTime)+' | stage='+r.stage};
 window.__pbReport=false;
 setInterval(()=>{return;const r=window.__pbRun;if(!r)return;try{const p=r.player.pos;const d={v:window.__pbAfkVersion,stage:r.stage,stageTime:Math.round(r.stageTime),mode:r.mode,endless:!!r.endless,items:(r.interactables.list||[]).map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,220)}))};if(typeof GM_xmlhttpRequest==='function')GM_xmlhttpRequest({method:'POST',url:'about:blank',data:JSON.stringify(d),headers:{'Content-Type':'application/json'}});}catch(e){}},8000);
@@ -186,7 +186,7 @@ function slotAllowed(price,gold,ledger,settings){
 }
 function mapTaskPolicy(item,settings,plan,run,ledger){
  if(item.used&&!['meowth'].includes(item.kind))return null;
- const kind=item.kind;if(item.__pbSkipUntil&&item.__pbSkipUntil>performance.now())return null;if(kind==='hypno'&&!(settings.banishMoves||[]).length&&!(settings.banishVitamins||[]).length)return null;
+ const kind=item.kind;if(item.__pbSkipUntil&&item.__pbSkipUntil>performance.now())return null;if(kind==='hypno'&&!(settings.banishMoves||[]).length&&!(settings.banishVitamins||[]).length)return null;if(kind==='cage'&&run&&(run.gold??0)<Number(settings.reserve||0))return null;
  if(kind==='altar'&&(!settings.autoAltar||item.data?.sealed))return null;
  if(kind==='ditto'&&(!settings.autoDitto||!plan.items.length&&!settings.itemPriority.length&&!(settings.itemMode==='auto'&&settings.itemStatFallback)))return null;
  if(kind==='fossil'&&(!settings.autoFossil||!['helix','dome','amber'].includes(settings.fossilChoice)))return null;
@@ -700,6 +700,7 @@ function selectTarget(run){
  const now=performance.now();if(now-lastTargetScan<300)return;lastTargetScan=now;
  const candidates=gatherTargets(run);
 try{if(opt.huntMiniboss!==false&&run.enemies){const E=run.enemies,p=run.player.pos,N=E.n??0;let bi=-1,bd=1e9;for(let i=0;i<N;i++){if(!E.alive[i])continue;const f=E.flags?.[i]||0;if(!((f&8192)||(f&4096)||((f&4)&&((run.stage??0)>=4))))continue;const d=Math.hypot((E.x[i]||0)-p.x,(E.z[i]||0)-p.z);if(d<bd){bd=d;bi=i}}if(bi>=0){const f=E.flags[bi]||0;candidates.unshift({key:'miniboss:'+bi,type:'miniboss',index:bi,x:E.x[bi],z:E.z[bi],radius:6,priority:-1,label:'讨伐'+((f&8192)?'召唤者':(f&4096)?'图腾':'传说首领')});}}}catch(e){}
+try{if((!candidates.length||candidates[0].distance>25)&&run.pickups){const P=run.pickups,N2=P.n??0;let pi=-1,pd=22;for(let i=0;i<N2;i++){if(!P.alive[i])continue;const d=Math.hypot((P.x[i]||0)-p.x,(P.z[i]||0)-p.z);if(d<pd){pd=d;pi=i}}if(pi>=0)candidates.push({key:'pickup:'+pi,type:'pickup',index:pi,x:P.x[pi],z:P.z[pi],radius:1.2,priority:40,label:'拾取掉落物'});}}catch(e){}
 const next=candidates[0];
  if(!next){target=null;path=[];mode=opt.paidBalls&&!paidOkay(run).ok?'等待免费球/异色；'+paidOkay(run).reason:'等待已启用且符合配置/预算的地图目标';return;}
  if(target?.key!==next.key){path=[];pathGoal=null;lastPlan=0;targetAt=now;lastMotion={x:run.player.pos.x,z:run.player.pos.z,at:now};}
@@ -723,7 +724,7 @@ function interact(run){
   if(target.type==='ball'&&canOpen(run,nearest)){
    releaseKeys();if(tap('KeyE'))log('打开 '+(freeBall(nearest)?'免费球':('普通球 · '+run.interactables.chestCost()+' ₽')));
   }else if(target.type==='task'&&nearest.kind!=='altar'&&mapTaskPolicy(nearest,opt,{...readBuildPlan(run),fus:currentRoute(run).pendingFusions},run,ledger)){
-   releaseKeys();if(tap('KeyE')){log('交互：'+target.label);skipped.set(nearest,performance.now()+(['meowth','slots','bill'].includes(nearest.kind)?90000:15000));}
+   releaseKeys();if(tap('KeyE')){log('交互：'+target.label);skipped.set(nearest,performance.now()+(['meowth','slots','bill'].includes(nearest.kind)?90000:['gengar','cage','rock'].includes(nearest.kind)?1200:15000));}
   }
  }
 
