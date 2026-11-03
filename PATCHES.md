@@ -136,3 +136,26 @@ bonk: { src:`bonk`, ring:`#ff3fc8`, name:`Bonkoin（由守护者或首领掉落�
 - 任务顺序排在 `portal` 之后
 
 守护者/首领死亡时会在旁边掉出邦币，正好和传送门同时出现。传送门仍是最高优先，但两者都在附近，按 E 会先收到最近的那个。
+## 3.3.5 — 紫苑塔（爬塔模式）
+
+塔是独立的一整套交互物：**`kind = 'tower'`，靠 `data.sub` 区分用途**。
+
+```js
+e.place(`tower`, oj.x, oj.z, { data:{ sub:`stairs` } })   // 上楼
+e.place(`tower`, ...,       { data:{ sub:`altar`  } })   // 献祭
+e.place(`tower`, ...,       { data:{ sub:`portal` } })   // 屋顶传送门
+e.place(`tower`, ...,       { data:{ sub:`leave`  } })   // 屋顶下山
+```
+
+游戏侧结构：`this.mode==='tower' && (this.tower=new Uj(this))`，`run.tower` 上有 `floor` / `state` / `roof` / `beyond`；7 层，清完 7F 上屋顶打耿鬼（species 94）。
+
+接入规则：
+
+| 目标 | 条件 |
+|---|---|
+| `sub==='stairs'` 上楼楼梯 | 仅 `run.tower.state === 'clear'`（清完本层）才去 |
+| `sub==='altar'` 塔内祭坛献祭 | 同上，且受「祭坛充能」开关控制 |
+| `sub==='portal'` 塔顶传送门 | 允许（Más Allá 深层） |
+| `sub==='leave'` 下山 | **永不点击**，避免提前退塔 |
+
+优先级 **-1.5**：低于地图传送门（-2），高于邦币（-1）和一切普通任务。标签会区分显示为「上楼楼梯 / 塔内祭坛献祭 / 塔顶传送门」。
