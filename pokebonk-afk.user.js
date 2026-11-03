@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PokéBonk 无尽挂机助手·完整配置版
 // @namespace    local.pokebonk.afk
-// @version      3.3.3
+// @version      3.3.4
 // @description  地图任务寻路、宝可梦配置计划、复制道具、商店与抽奖预算。F8 开关。
 // @match        https://pokebonk.com/*
 // @run-at       document-idle
@@ -11,7 +11,7 @@
 // @grant        none
 // ==/UserScript==
 (function () {
-'use strict';window.__pbAfkVersion='3.3.3';
+'use strict';window.__pbAfkVersion='3.3.4';
 window.__pbDump=()=>{const r=window.__pbRun;if(!r)return'no run';const p=r.player.pos,l=r.interactables.list||[];console.table(l.map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,90)})));return l.length+' items | stageTime='+Math.round(r.stageTime)+' | stage='+r.stage};
 window.__pbReport=false;
 setInterval(()=>{return;const r=window.__pbRun;if(!r)return;try{const p=r.player.pos;const d={v:window.__pbAfkVersion,stage:r.stage,stageTime:Math.round(r.stageTime),mode:r.mode,endless:!!r.endless,items:(r.interactables.list||[]).map(o=>({kind:o.kind,used:o.used,sealed:o.data&&o.data.sealed,r:o.r,x:+(o.x||0).toFixed(1),z:+(o.z||0).toFixed(1),d:+Math.hypot((o.x||0)-p.x,(o.z||0)-p.z).toFixed(1),data:JSON.stringify(o.data??null).slice(0,220)}))};if(typeof GM_xmlhttpRequest==='function')GM_xmlhttpRequest({method:'POST',url:'about:blank',data:JSON.stringify(d),headers:{'Content-Type':'application/json'}});}catch(e){}},8000);
@@ -64,7 +64,7 @@ const DEFAULTS = {
  movePriority:[],moveNever:[],vitaminPriority:[],vitaminNever:[],fusionPriority:[],fusionNever:[],
  banishMoves:[],banishVitamins:[],manualItems:[],
  autoReroll:true,autoSkip:true,autoBanish:false,noMatchOrder:['reroll','banish','skip'],rerollPerLevel:'3',rerollRunCap:'',skipRunCap:'',banishRunCap:'',
- taskOrder:['portal','boss','gengar','rock','cage','altar','freechest','chest','ditto','fossil','snorlax','bill','meowth','slots','berry','challenge','guardian','shrine','cursedchest','nest','greed','rhydon','porygon','magnet','hypno'],
+ taskOrder:['portal','bonk','boss','gengar','rock','cage','altar','freechest','chest','ditto','fossil','snorlax','bill','meowth','slots','berry','challenge','guardian','shrine','cursedchest','nest','greed','rhydon','porygon','magnet','hypno'],
  avoidHazards:true
 };
 const norm=s=>String(s??'').replace(/\u00a0/g,' ').replace(/＋/g,'+').trim();
@@ -194,8 +194,8 @@ function mapTaskPolicy(item,settings,plan,run,ledger){
  if(kind==='bill'&&(!settings.autoFusion||!plan.fus.length||!item.data?.ready||performance.now()<(window.__pbBillSkip||0)))return null;
  if(kind==='meowth'&&(!settings.autoShop||!plan.items.length&&!settings.itemPriority.length&&!(settings.itemMode==='auto'&&settings.itemStatFallback)||!spendingAllowed('shop',0,run.gold,ledger.shopSpent||0,settings).ok))return null;
  if(kind==='slots'&&(!settings.autoSlots||!slotAllowed(0,run.gold,ledger,settings).ok))return null;
- try{if(run?.endless&&(kind==='portal'||kind==='guardian'||kind==='boss'))return null;if((kind==='guardian'||kind==='boss')&&!((600-(run?.stageTime??0))<=(settings.guardianWindow??60)))return null;}catch(e){}if(!['altar','ditto','fossil','snorlax','bill','meowth','slots','boss','portal','rock','gengar','cage','shrine'].includes(kind)){try{const u=(window.__pbUnknownKind??=new Set);if(!u.has(kind)){u.add(kind);console.log('[PB] unknown interactable kind:',kind)}}catch(e){}return null;}
- return {label:({altar:'未知祭坛充能',ditto:'百变怪复制',fossil:'化石遗迹',snorlax:'卡比兽',bill:'融合机器',meowth:'喵喵商店',slots:'老虎机',guardian:'守护者祭坛',shrine:'圣地',portal:'传送门下一图',boss:'守护者祭坛',challenge:'挑战',berry:'树果',rock:'碎岩',cage:'笼中宝可梦',cursedchest:'诅咒宝箱',nest:'巢穴',greed:'贪婪奖励',rhydon:'独角犀牛',porygon:'多边兽',magnet:'磁铁',hypno:'引梦貘人',gengar:'耿鬼祭坛'})[kind],radius:kind==='altar'?Math.max(.7,(item.r||3)*.45):kind==='shrine'?Math.max(1.5,Math.min(3,item.r||2)):(kind==='guardian'||kind==='boss')?Math.max(1.5,Math.min(3.5,(item.r||3)*.85)):kind==='portal'?Math.max(1.2,Math.min(2.5,item.r||2)):Math.min(2,item.r||2)};
+ try{if(run?.endless&&(kind==='portal'||kind==='guardian'||kind==='boss'))return null;if((kind==='guardian'||kind==='boss')&&!((600-(run?.stageTime??0))<=(settings.guardianWindow??60)))return null;}catch(e){}if(!['altar','ditto','fossil','snorlax','bill','meowth','slots','boss','portal','rock','gengar','cage','shrine','bonk'].includes(kind)){try{const u=(window.__pbUnknownKind??=new Set);if(!u.has(kind)){u.add(kind);console.log('[PB] unknown interactable kind:',kind)}}catch(e){}return null;}
+ return {label:({altar:'未知祭坛充能',ditto:'百变怪复制',fossil:'化石遗迹',snorlax:'卡比兽',bill:'融合机器',meowth:'喵喵商店',slots:'老虎机',guardian:'守护者祭坛',shrine:'圣地',portal:'传送门下一图',boss:'守护者祭坛',challenge:'挑战',berry:'树果',rock:'碎岩',cage:'笼中宝可梦',cursedchest:'诅咒宝箱',nest:'巢穴',greed:'贪婪奖励',rhydon:'独角犀牛',porygon:'多边兽',magnet:'磁铁',hypno:'引梦貘人',gengar:'耿鬼祭坛',bonk:'邦币'})[kind],radius:kind==='altar'?Math.max(.7,(item.r||3)*.45):kind==='shrine'?Math.max(1.5,Math.min(3,item.r||2)):kind==='bonk'?Math.max(1.8,Math.min(3,item.r||2.5)):(kind==='guardian'||kind==='boss')?Math.max(1.5,Math.min(3.5,(item.r||3)*.85)):kind==='portal'?Math.max(1.2,Math.min(2.5,item.r||2)):Math.min(2,item.r||2)};
 }
 
 
@@ -680,7 +680,7 @@ function gatherTargets(run){
    const kind=freeBall(item)?'freechest':'chest';list.push({key:item,ref:item,type:'ball',x:item.x,z:item.z,radius:Math.min(2,item.r||2.6),priority:3+order.indexOf(kind),label:freeBall(item)?'免费超级球/赠球':'普通精灵球'});
   }else if(task){
    const holding=item.kind==='altar'&&target?.ref===item&&Math.hypot(item.x-p.x,item.z-p.z)<item.r;
-   list.push({key:item,ref:item,type:'task',kind:item.kind,x:item.x,z:item.z,...task,priority:item.kind==='portal'?-2:(holding?2.5:3+order.indexOf(item.kind))});
+   list.push({key:item,ref:item,type:'task',kind:item.kind,x:item.x,z:item.z,...task,priority:item.kind==='portal'?-2:item.kind==='bonk'?-1:(holding?2.5:3+order.indexOf(item.kind))});
   }
  }
  for(const t of list)t.distance=Math.hypot(t.x-p.x,t.z-p.z);
